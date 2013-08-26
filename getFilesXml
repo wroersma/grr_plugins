@@ -1,0 +1,156 @@
+#Grr_Plugins  
+#Copyright (C) NVINT 2013 
+# This program is free software; you can redistribute it and/or modify 
+# it under the terms of the GNU General Public License as published by 
+# the Free Software Foundation; either version 2 of the License, or (at
+# your option) any later version.      
+#      
+# This program is distributed in the hope that it will be useful, but  
+# WITHOUT ANY WARRANTY; without even the implied warranty of   
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU     
+# General Public License for more details.     
+#      
+# You should have received a copy of the GNU General Public License    
+# along with this program; if not, write to the Free Software  
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA      
+#      
+       
+"""    
+@author:       Meredith Ostrowski
+@license:      GNU General Public License 2.0 or later 
+@contact:      mostrowski@nvint.com
+@organization: NVINT   
+"""  
+
+
+
+
+import os
+import itertools
+import string
+import ctypes
+import platform
+import mmap
+from xml.dom.minidom import parse, parseString
+
+
+UUID = input("Please enter virtual machine UUID: ")
+
+#Find all drives on the computer
+def get_available_drives():
+    if 'Windows' not in platform.system():
+        return []
+    drive_bitmask = ctypes.cdll.kernel32.GetLogicalDrives()
+    return list(itertools.compress(string.ascii_uppercase,
+               map(lambda x:ord(x) - ord('0'), bin(drive_bitmask)[:1:-1])))
+    
+temp = get_available_drives()
+
+#Initialize paths to "Empty" 
+vhd_path = "Empty"
+vsv_path = "Empty"
+bin_path = "Empty"
+dom1 = "Empty"
+
+
+
+
+#Check every drive on the PC for the .xml file
+def get_xml(dom1):
+    for x in temp:
+        drive_string = x + ":" 
+        for r,d,f in os.walk(drive_string):
+            for files in f:
+                
+                if files.endswith(".xml"):
+                
+                    string_path = os.path.join(r,files)
+                    if UUID in string_path:
+                        
+                        dom1 = parse(string_path)   # parse the XML file
+    return dom1
+
+dom1 = get_xml(dom1)
+
+def check_xml(dom1, path, name):
+    if dom1 != "Empty":
+        if len(dom1.getElementsByTagName(name)) != 0:
+                            
+            instances = dom1.getElementsByTagName(name)
+            for i in instances:
+                path =  " ".join(t.nodeValue for t in i.childNodes if t.nodeType == t.TEXT_NODE)
+                print path
+    return path
+
+vhd_path = check_xml(dom1, vhd_path, "pathname")
+bin_path = check_xml(dom1, bin_path, "memlocation")
+vsv_path = check_xml(dom1, vsv_path, "vsvlocation")
+
+
+
+
+#If the paths have not been found in the .xml file, check the PC for the paths to the files:
+def check_pc (path, ext, temp):
+    for x in temp:
+        drive_string = x + ":" 
+        for r,d,f in os.walk(drive_string):
+            for files in f:
+                if files.endswith(ext):
+                    path_temp = os.path.join(r,files)
+                    path_temp = path_temp[:2] + "\\" + path_temp[2:]
+                    
+                    if UUID in path_temp:
+                        path = path_temp
+                        print path
+    return path
+                        
+if vhd_path == "Empty":
+    vhd_path = check_pc(vhd_path, ".vhd", temp)
+if bin_path == "Empty":
+    bin_path = check_pc(bin_path, ".bin", temp)
+if vsv_path == "Empty":
+    vsv_path = check_pc(vsv_path, ".vsv", temp)
+
+
+
+
+#If the paths to the files were not found in the PC, ask the user to enter the paths manually:
+def manual_path(vhd_path, bin_path, vsv_path):
+    if vhd_path == "Empty":
+        x = input ("Enter the number of vhd files ")
+        for i in range(x):
+            vhd_path = input("Enter vhd_path ")
+            print vhd_path
+        
+    if bin_path == "Empty":
+        y = input ("Enter the number of bin files ")
+        for i in range(y):
+            bin_path= input("Enter bin_path ")
+            print bin_path
+
+    if vsv_path == "Empty":
+        z = input ("Enter the number of vsv files ")
+        for i in range(z):
+            vsv_path = input("Enter vsv_path ")
+            print vsv_path
+        
+manual_path(vhd_path, bin_path, vsv_path)
+
+
+
+
+#Check to see if these paths are correct:
+ans = input("Are these paths correct?(y/n) ")
+while ((ans != "y") and (ans != "n")):
+    ans = input("Please enter \"y\" or \"n\"")
+    
+while ans == "n":
+    vhd_path = "Empty"
+    bin_path = "Empty"
+    vsv_path = "Empty"   
+
+    manual_path(vhd_path, bin_path, vsv_path)
+    
+    ans = input("Are these paths correct?(y/n) ")
+    while ((ans != "y") and (ans != "n")):
+        ans = input("Please enter \"y\" or \"n\" ")
