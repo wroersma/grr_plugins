@@ -23,12 +23,43 @@
 """  
 
 
-#Enter paths to .vhd, .vsv, .bin files
-VMName = input("Insert Virtual Machine Name ")
-VHDPath = input("Insert path to .vhd file ")
-VSVPath = input("Insert path to .vsv file ")
-BINPath = input("Insert path to .bin file ")
-      
-print VHDPath
-print VSVPath
-print BINPath
+vhd_path = "Empty"
+bin_path = "Empty"
+vsv_path = "Empty"
+
+def manual_path(vhd_path, bin_path, vsv_path):
+    if vhd_path == "Empty":
+        x = input ("Enter the number of vhd files ")
+        for i in range(x):
+            vhd_path = input("Enter vhd_path ")
+            print vhd_path
+        
+    if bin_path == "Empty":
+        y = input ("Enter the number of bin files ")
+        for i in range(y):
+            bin_path= input("Enter bin_path ")
+            print bin_path
+
+    if vsv_path == "Empty":
+        z = input ("Enter the number of vsv files ")
+        for i in range(z):
+            vsv_path = input("Enter vsv_path ")
+            print vsv_path
+        
+manual_path(vhd_path, bin_path, vsv_path)
+
+#Check to see if these paths are correct:
+ans = input("Are these paths correct?(y/n) ")
+while ((ans != "y") and (ans != "n")):
+    ans = input("Please enter \"y\" or \"n\"")
+    
+while ans == "n":
+    vhd_path = "Empty"
+    bin_path = "Empty"
+    vsv_path = "Empty"   
+
+    manual_path(vhd_path, bin_path, vsv_path)
+    
+    ans = input("Are these paths correct?(y/n) ")
+    while ((ans != "y") and (ans != "n")):
+        ans = input("Please enter \"y\" or \"n\" ")
